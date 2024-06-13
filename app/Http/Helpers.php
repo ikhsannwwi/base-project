@@ -16,7 +16,7 @@ function asset_frontpage($url)
 
 function template_administrator($url)
 {
-	return asset('templateSneat/' . $url);
+	return asset('templateAdmin/' . $url);
 }
 
 function template_frontpage($url)
