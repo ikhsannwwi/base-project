@@ -1,8 +1,12 @@
 <?php
 
 use App\Models\User;
+use Ramsey\Uuid\Uuid;
 use App\Models\LogSystem;
+use App\Models\UserGroup;
 use Illuminate\Support\Str;
+use Jenssegers\Agent\Agent;
+use App\Models\ModuleAccess;
 
 function asset_administrator($url)
 {
@@ -93,7 +97,7 @@ function isAllowed($modul, $modul_akses)
 		return false;
 	}
 	$data_user = User::find(auth()->user()->id);
-	$grup_pengguna_id = $data_user->user_group_id;
+	$grup_pengguna_id = $data_user->usergroup_id;
 	$permission = getPermissionGroup($grup_pengguna_id);
 	if ($grup_pengguna_id == 0) {
 		return TRUE;
@@ -120,12 +124,12 @@ function getDefaultPermission()
 {
 	$query = ModuleAccess::select(DB::raw("
     module_access.*,
-    user_group_permissions.user_group_id,
-    user_group_permissions.status"))
+    user_group_permission.usergroup_id,
+    user_group_permission.status"))
 		->leftJoin(
-			DB::raw("user_group_permissions"),
+			DB::raw("user_group_permission"),
 			function ($join) {
-				$join->on('user_group_permissions.module_access_id', '=', 'module_access.id');
+				$join->on('user_group_permission.module_access_id', '=', 'module_access.id');
 			}
 		);
 	$data_akses = $query->get();
@@ -139,18 +143,18 @@ function getDefaultPermission()
 	return $permission;
 }
 
-function getPermissionGroup($user_group_id)
+function getPermissionGroup($usergroup_id)
 {
 	$data_akses = ModuleAccess::select(DB::raw('
-    module.identifiers as module_identifiers,
+    module.identifier as module_identifier,
     module_access.*,
-    user_group_permissions.user_group_id,
-    user_group_permissions.status'))
+    user_group_permission.usergroup_id,
+    user_group_permission.status'))
 		->leftJoin(
-			DB::raw("user_group_permissions"),
-			function ($join) use ($user_group_id) {
-				$join->on('user_group_permissions.module_access_id', '=', 'module_access.id')
-                ->where("user_group_permissions.user_group_id", "=", $user_group_id);
+			DB::raw("user_group_permission"),
+			function ($join) use ($usergroup_id) {
+				$join->on('user_group_permission.module_access_id', '=', 'module_access.id')
+                ->where("user_group_permission.usergroup_id", "=", $usergroup_id);
 			}
 		)
 		->leftJoin(DB::raw("module"), "module.id", "=", "module_access.module_id")
@@ -164,7 +168,7 @@ function getPermissionGroup($user_group_id)
 		} else {
 			$status = $row->status;
 		}
-		$permission[$user_group_id][$row->module_identifiers][$row->identifiers] = $status;
+		$permission[$usergroup_id][$row->module_identifier][$row->identifier] = $status;
 	}
 	$index++;
 
@@ -174,15 +178,15 @@ function getPermissionGroup($user_group_id)
 function getPermissionGroup2($x)
 {
 	$data_akses = ModuleAccess::select(DB::raw('
-    module.identifiers as module_identifiers,
+    module.identifier as module_identifier,
     module_access.*,
-    user_group_permissions.user_group_id,
-    user_group_permissions.status'))
+    user_group_permission.usergroup_id,
+    user_group_permission.status'))
 		->leftJoin(
-			DB::raw("user_group_permissions"),
+			DB::raw("user_group_permission"),
 			function ($join) use ($x) {
-				$join->on('user_group_permissions.module_access_id', '=', 'module_access.id')
-                ->where("user_group_permissions.user_group_id", "=", $x);
+				$join->on('user_group_permission.module_access_id', '=', 'module_access.id')
+                ->where("user_group_permission.usergroup_id", "=", $x);
 			}
 		)
 		->leftJoin(DB::raw("module"), "module.id", "=", "module_access.module_id")
@@ -196,7 +200,7 @@ function getPermissionGroup2($x)
 		} else {
 			$status = $row->status;
 		}
-		$permission[$x][$row->module_identifiers][$row->identifiers] = $status;
+		$permission[$x][$row->module_identifier][$row->identifier] = $status;
 	}
 	$index++;
 	return $permission;
@@ -208,16 +212,16 @@ function getPermissionModuleGroup()
 		return $permission = [];
 	}
 	$data_user = User::find(auth()->user()->id);
-	$grup_pengguna_id = $data_user->user_group_id;
+	$grup_pengguna_id = $data_user->usergroup_id;
 	$data_akses = ModuleAccess::select(DB::raw('
-    module.identifiers as module_identifiers, 
-    COUNT(user_group_permissions.id) as permission_given'))
+    module.identifier as module_identifier, 
+    COUNT(user_group_permission.id) as permission_given'))
 		->leftJoin(
-			DB::raw("user_group_permissions"),
+			DB::raw("user_group_permission"),
 			function ($join) use ($grup_pengguna_id) {
-				$join->on('user_group_permissions.module_access_id', '=', 'module_access.id')
-                ->where("user_group_permissions.user_group_id", "=", $grup_pengguna_id)
-                ->where("user_group_permissions.status", 1);
+				$join->on('user_group_permission.module_access_id', '=', 'module_access.id')
+                ->where("user_group_permission.usergroup_id", "=", $grup_pengguna_id)
+                ->where("user_group_permission.status", 1);
 			}
 		)
 		->leftJoin(DB::raw("module"), "module.id", "=", "module_access.module_id")
@@ -233,7 +237,7 @@ function getPermissionModuleGroup()
 		} else {
 			$status = FALSE;
 		}
-		$permission[$row->module_identifiers] = $status;
+		$permission[$row->module_identifier] = $status;
 	}
 	$index++;
 
@@ -246,7 +250,7 @@ function showModule($module, $permission_module)
 		return false;
 	}
 	$data_user = User::find(auth()->user()->id);
-	$grup_pengguna_id = $data_user->user_group_id;
+	$grup_pengguna_id = $data_user->usergroup_id;
 	if ($grup_pengguna_id == 0) {
 		return TRUE;
 	} else {
@@ -256,4 +260,11 @@ function showModule($module, $permission_module)
 			return FALSE;
 		}
 	}
+}
+
+if (! function_exists('generateUuid')) {
+    function generateUuid()
+    {
+        return Uuid::uuid4()->toString();
+    }
 }

@@ -20,6 +20,7 @@
     <link href="{{template_administrator('assets/plugins/global/plugins.bundle.css')}}" rel="stylesheet" type="text/css" />
     <link href="{{template_administrator('assets/css/style.bundle.css')}}" rel="stylesheet" type="text/css" />
     <link href="{{template_administrator('assets/plugins/custom/datatables/datatables.bundle.css')}}" rel="stylesheet" type="text/css"/>
+    <link href="{{asset_administrator('assets/css/style.css')}}" rel="stylesheet" type="text/css"/>
     @stack('styles')
     <!--end::Global Stylesheets Bundle-->
 </head>
@@ -27,6 +28,9 @@
 <!--begin::Body-->
 
 <body id="kt_body" class="header-fixed header-tablet-and-mobile-fixed aside-fixed aside-secondary-disabled">
+    <div id="audioContainer" class="audioContainer">
+        <!-- Other content in the container -->
+     </div>
     <!--begin::Main-->
     <!--begin::Root-->
     <div class="d-flex flex-column flex-root">
@@ -83,6 +87,18 @@
     <script src="{{template_administrator('assets/plugins/custom/datatables/datatables.bundle.js')}}"></script>
 
     <!--end::Page Custom Javascript-->
+    <script src="{{ asset_administrator('plugins/sweetalert2/toast.js') }}"></script>
+    <script src="{{ asset_administrator('plugins/sweetalert2/page/toast.js') }}"></script>
+    <script>
+        var toastMessages = {
+            path: "{{ asset_administrator('plugins/toasty/') }}",
+            errors: [],
+            error: @json(session('error')),
+            success: @json(session('success')),
+            warning: @json(session('warning')),
+            info: @json(session('info'))
+        };
+    </script>
     <!--end::Javascript-->
     @stack('scripts')
 </body>

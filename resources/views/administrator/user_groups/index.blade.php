@@ -1,17 +1,12 @@
 @extends('administrator.layouts.main')
 @push('styles')
-<style>
-    .dropdown-toggle::after {
-        display: none;
-    }
-</style>
 @endpush
 @push('breadcrumb')
     <ul class="breadcrumb fw-bold fs-base my-1">
         <li class="breadcrumb-item text-muted">
             <a href="{{ route('admin.dashboard') }}" class="text-muted">Home</a>
         </li>
-        <li class="breadcrumb-item text-dark">test</li>
+        <li class="breadcrumb-item text-dark">User Groups</li>
     </ul>
 @endpush
 @section('content')
@@ -40,24 +35,62 @@
                                     <a href="javascript:void(0)" class="btn btn-light-danger mx-1">
                                         <i class="fas fa-file-pdf fs-4"></i>
                                     </a>
-                                    <a href="javascript:void(0)" class="btn btn-primary mx-1">
+                                    <a href="{{route('admin.user_groups.add')}}" class="btn btn-primary mx-1">
                                         <i class="fas fa-plus fs-4"></i>Add
                                     </a>
                                 </div>
-                                <div class="dropdown d-block d-sm-none d-md-none d-lg-none d-xl-none d-xxl-none">
-                                    <a class="text-dark dropdown-toggle" href="javascript:void(0)" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M3 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink">
-                                        <a class="dropdown-item fs-6 fw-bold triggerFilterData" href="javascript:void(0)">Filter</a>
-                                        <a class="dropdown-item fs-6 fw-bold" href="javascript:void(0)">Excel</a>
-                                        <a class="dropdown-item fs-6 fw-bold" href="javascript:void(0)">Pdf</a>
-                                        <a class="dropdown-item fs-6 fw-bold" href="javascript:void(0)">Add</a>
+                                <div class="card-toolbar d-block d-sm-none d-md-none d-lg-none d-xl-none d-xxl-none">
+                                    <!--begin::Dropdown-->
+                                    <button type="button"
+                                        class="btn btn-sm btn-icon btn-color-primary btn-active-light-primary"
+                                        data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
+                                        data-kt-menu-flip="top-end">
+                                        <!--begin::Svg Icon | path: icons/duotone/Layout/Layout-4-blocks-2.svg-->
+                                        <span class="svg-icon svg-icon-2 svg-icon-primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
+                                                height="24px" viewBox="0 0 24 24" version="1.1">
+                                                <g stroke="none" stroke-width="1" fill="none"
+                                                    fill-rule="evenodd">
+                                                    <rect x="5" y="5" width="5" height="5"
+                                                        rx="1" fill="#000000" />
+                                                    <rect x="14" y="5" width="5" height="5"
+                                                        rx="1" fill="#000000" opacity="0.3" />
+                                                    <rect x="5" y="14" width="5" height="5"
+                                                        rx="1" fill="#000000" opacity="0.3" />
+                                                    <rect x="14" y="14" width="5" height="5"
+                                                        rx="1" fill="#000000" opacity="0.3" />
+                                                </g>
+                                            </svg>
+                                        </span>
+                                        <!--end::Svg Icon-->
+                                    </button>
+                                    <!--begin::Menu 2-->
+                                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-bold w-200px"
+                                        data-kt-menu="true">
+                                        <!--begin::Menu item-->
+                                        <div class="menu-item px-3">
+                                            <div class="menu-content fs-6 text-dark fw-bolder px-3 py-4">Quick
+                                                Actions</div>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu separator-->
+                                        <div class="separator mb-3 opacity-75"></div>
+                                        <!--end::Menu separator-->
+                                        <!--begin::Menu item-->
+                                        <div class="menu-item px-3">
+                                            <a href="javascript:void(0)" class="menu-link px-3 triggerFilterData"><i class="fas fa-search mx-1"></i>Filter</a>
+                                        </div>
+                                        <div class="menu-item px-3">
+                                            <a href="{{route('admin.user_groups.add')}}" class="menu-link px-3"><i class="fas fa-plus mx-1"></i>Add Data</a>
+                                        </div>
+                                        <!--end::Menu item-->
+                                        <!--begin::Menu separator-->
+                                        <div class="separator mb-3 opacity-75"></div>
+                                        <!--end::Menu separator-->
                                     </div>
+                                    <!--end::Menu 2-->
+                                    <!--end::Dropdown-->
                                 </div>
                             </div>
                             <div id="filter-section" class="filter-section h-125px h-sm-200px h-md-200px h-lg-200px h-xl-200px h-xxl-200px" style="display: none">
@@ -94,84 +127,14 @@
                                 <table id="DataTable" class="table table-striped table-row-bordered gy-5 gs-7">
                                     <thead>
                                         <tr class="fw-bold fs-6 text-gray-800">
-                                            <th class="min-w-200px">First name</th>
-                                            <th class="min-w-150px">Last name</th>
-                                            <th class="min-w-300px">Position</th>
-                                            <th class="min-w-200px">Office</th>
-                                            <th class="min-w-100px">Age</th>
-                                            <th class="min-w-150px">Start date</th>
-                                            <th class="min-w-150px">Salary</th>
-                                            <th class="min-w-150px">Extn.</th>
-                                            <th class="min-w-150px">E-mail</th>
+                                            <th class="min-w-15px">No</th>
+                                            <th class="min-w-500px">Name</th>
+                                            <th class="min-w-150px">Status</th>
+                                            <th class="min-w-200px">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td>Tiger</td>
-                                            <td>Nixon</td>
-                                            <td>System Architect</td>
-                                            <td>Edinburgh</td>
-                                            <td>61</td>
-                                            <td>2011/04/25</td>
-                                            <td>$320,800</td>
-                                            <td>5421</td>
-                                            <td>t.nixon@datatables.net</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Garrett</td>
-                                            <td>Winters</td>
-                                            <td>Accountant</td>
-                                            <td>Tokyo</td>
-                                            <td>63</td>
-                                            <td>2011/07/25</td>
-                                            <td>$170,750</td>
-                                            <td>8422</td>
-                                            <td>g.winters@datatables.net</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Garrett</td>
-                                            <td>Winters</td>
-                                            <td>Accountant</td>
-                                            <td>Tokyo</td>
-                                            <td>63</td>
-                                            <td>2011/07/25</td>
-                                            <td>$170,750</td>
-                                            <td>8422</td>
-                                            <td>g.winters@datatables.net</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Garrett</td>
-                                            <td>Winters</td>
-                                            <td>Accountant</td>
-                                            <td>Tokyo</td>
-                                            <td>63</td>
-                                            <td>2011/07/25</td>
-                                            <td>$170,750</td>
-                                            <td>8422</td>
-                                            <td>g.winters@datatables.net</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Garrett</td>
-                                            <td>Winters</td>
-                                            <td>Accountant</td>
-                                            <td>Tokyo</td>
-                                            <td>63</td>
-                                            <td>2011/07/25</td>
-                                            <td>$170,750</td>
-                                            <td>8422</td>
-                                            <td>g.winters@datatables.net</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Garrett</td>
-                                            <td>Winters</td>
-                                            <td>Accountant</td>
-                                            <td>Tokyo</td>
-                                            <td>63</td>
-                                            <td>2011/07/25</td>
-                                            <td>$170,750</td>
-                                            <td>8422</td>
-                                            <td>g.winters@datatables.net</td>
-                                        </tr>
+                                        
                                     </tbody>
                                 </table>
                             </div>
@@ -188,15 +151,92 @@
     </div>
 @endsection
 @push('scripts')
+    <script src="{{ asset_administrator('plugins/sweetalert2/page/option.js') }}"></script>
     <script type="text/javascript">
         $(document).ready(function() {
+            var data_table = $('#DataTable').DataTable({
+                processing: true,
+                serverSide: true,
+                order: [
+                    [0, 'asc']
+                ],
+                scrollX: true, // Enable horizontal scrolling
+                ajax: {
+                    url: '{{ route('admin.user_groups.getData') }}',
+                    dataType: "JSON",
+                    type: "GET",
+                    data: function(d) {
+                        // d.status = getStatus();
+                    }
+
+                },
+                columns: [{
+                        render: function(data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        },
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        searchable: false,
+                        sortable: false,
+                        class: 'text-center'
+                    }
+                ],
+            });
+
             $('.triggerFilterData').on('click', function(){
                 $('#filter-section').slideToggle();
             })
 
-            $("#DataTable").DataTable({
-                "scrollX": true
-            });
+            $(document).on('click', '.delete', function() {
+                var another = this
+                var id = $(this).data('id');
+                Swal.fire({
+                    html: 'Are you sure delete this data?',
+                    icon: "info",
+                    buttonsStyling: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Ok, got it!",
+                    cancelButtonText: 'Nope, cancel it',
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                        cancelButton: 'btn btn-danger'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{{route('admin.user_groups.destroy')}}',
+                            data: {
+                                id: id,
+                            },
+                            type: "get",
+                            cache: false,
+                            async: false,
+                            success: function (response) {
+                                if (response.status === 'success') {
+                                    data_table.ajax.reload(null, false);
+                                    var toasty = new Toasty(optionToast);
+                                    toasty.configure(optionToast);
+                                    toasty.success(response.message);
+                                } else {
+                                    var toasty = new Toasty(optionToast);
+                                    toasty.configure(optionToast);
+                                    toasty.error(response.message);
+                                }
+                            }
+                        });
+                    }
+                });
+            })
         })
     </script>
 @endpush

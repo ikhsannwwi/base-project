@@ -1,0 +1,11 @@
+.dropdown-toggle::after {
+    display: none;
+}
+.form-group.mandatory .form-label:first-child:after {
+    color: #dc3545;
+    content: " *";
+  }
+  .form-group.is-invalid * {
+    border-color: #dc3545;
+    color: #dc3545;
+  }

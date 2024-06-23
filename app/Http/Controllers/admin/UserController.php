@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\admin;
 
-use App\Http\Controllers\Controller;
+use DataTables;
+use App\Models\User;
+use App\Models\UserGroup;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     private static $module = "user";
 
     public function index(){
-        //Check permission
         if (!isAllowed(static::$module, "view")) {
             abort(403);
         }
@@ -42,42 +46,34 @@ class UserController extends Controller
             ->addColumn('status', function ($row) {
                 if (isAllowed(static::$module, "status")) : //Check permission
                     if ($row->status) {
-                        $status = '<div class="d-flex"><div class="form-check form-switch form-check-custom form-check-solid">
+                        $status = '<div class="form-check form-switch form-check-custom form-check-solid">
                         <input class="form-check-input h-20px w-30px changeStatus" data-ix="' . $row->id . '" type="checkbox" value="1"
                             name="status" checked="checked" />
                         <label class="form-check-label fw-bold text-gray-400"
-                            for="status"></label>
+                            for="status"><span class="badge badge-success">Active</span></label>
                     </div>';
-                        $status .= '<span class="badge bg-success">Aktif</span></div>';
                     } else {
-                        $status = '<div class="d-flex"><div class="form-check form-switch form-check-custom form-check-solid">
+                        $status = '<div class="form-check form-switch form-check-custom form-check-solid">
                         <input class="form-check-input h-20px w-30px changeStatus" data-ix="' . $row->id . '" type="checkbox" value="1"
                             name="status"/>
                             <label class="form-check-label fw-bold text-gray-400"
-                            for="status"></label>
+                            for="status"><span class="badge badge-danger">Inactive</span></label>
                             </div>';
-                        $status .= '<span class="badge bg-danger">Tidak Aktif</span></div>';
                     }
                     return $status;
                 endif;
             })
             ->addColumn('action', function ($row) {
                 $btn = "";
-                if (isAllowed(static::$module, "delete")) : //Check permission
-                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-danger btn-sm delete me-3 ">
-                    Delete
-                </a>';
+                if (isAllowed(static::$module, "edit")) :
+                    $btn .= '<a href="'.route('admin.users.edit',$row->id).'" class="btn btn-light-primary btn-sm mx-1" title="Edit"><i class="fas fa-edit"></i></a>';
                 endif;
-                if (isAllowed(static::$module, "edit")) : //Check permission
-                    $btn .= '<a href="'.route('admin.users.edit',$row->id).'" class="btn btn-primary btn-sm me-3 ">
-                    Edit
-                </a>';
+                if (isAllowed(static::$module, "detail")) :
+                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light btn-sm mx-1" title="Detail"><i class="fas fa-info-circle"></i></a>';
                 endif;
-                if (isAllowed(static::$module, "detail")) : //Check permission
-                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-secondary btn-sm me-3" data-bs-toggle="modal" data-bs-target="#detailUser">
-                    Detail
-                </a>';
-                endif;
+                if (isAllowed(static::$module, "delete")) :
+                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light-danger btn-sm delete mx-1" title="Delete"><i class="fas fa-trash"></i></a>';
+                    endif;
                 return $btn;
             })
             ->rawColumns(['status', 'action'])
@@ -85,7 +81,6 @@ class UserController extends Controller
     }
     
     public function add(){
-        //Check permission
         if (!isAllowed(static::$module, "add")) {
             abort(403);
         }
@@ -93,8 +88,7 @@ class UserController extends Controller
         return view('administrator.users.add');
     }
     
-    public function save(Request $request){
-        //Check permission
+    public function store(Request $request){
         if (!isAllowed(static::$module, "add")) {
             abort(403);
         }
@@ -102,56 +96,44 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|unique:users',
+            'telephone' => 'required',
             'password' => 'required|min:8',
-            'konfirmasi_password' => 'required|min:8|same:password',
+            'password_confirmation' => 'required|min:8|same:password',
             'user_group' => 'required',
             'status' => 'required',
         ]);
     
         $data = User::create([
+            'uuid' => generateUuid(),
             'name' => $request->name,
             'email' => $request->email,
+            'telephone' => $request->telephone,
             'password' => Hash::make($request->password),
-            'user_group_id' => $request->user_group,
+            'usergroup_id' => $request->user_group,
             'status' => $request->status,
-            'kode' => $request->kode,
             'remember_token' => Str::random(60),
         ]);
-
-        $profile = Profile::create([
-            'user_kode' => $data['kode'],
-            'sosial_media' => '{
-                "linkedin": "",
-                "twitter": "",
-                "instagram": "",
-                "facebook": ""
-              }',
-        ]);
     
-        createLog(static::$module, __FUNCTION__, $data->id, ['Data yang disimpan' => $data]);
-        return redirect()->route('admin.users')->with('success', 'Data berhasil disimpan.');
+        createLog(static::$module, __FUNCTION__, $data->id, ['Saved Data' => $data]);
+        return redirect()->route('admin.users')->with('success', 'Data saved successfully.');
     }
     
-    
     public function edit($id){
-        //Check permission
         if (!isAllowed(static::$module, "edit")) {
             abort(403);
         }
 
         $data = User::find($id);
 
-        if ($data->email == 'dev@daysf.com' && auth()->user()->email != $data->email) {
+        if ($data->usergroup_id === 0 && auth()->user()->email != $data->email) {
             return redirect()->route('admin.users')->with('warning', 'Forbidden.');
         }
 
         return view('administrator.users.edit',compact('data'));
     }
-    
-    public function update(Request $request)
-    {
-        // Check permission
-        if (!isAllowed(static::$module, "edit")) {
+
+    public function update(Request $request){
+        if (!isAllowed(static::$module, "add")) {
             abort(403);
         }
 
@@ -160,27 +142,27 @@ class UserController extends Controller
 
         $rules = [
             'name' => 'required',
+            'telephone' => 'required',
             'email' => 'required|unique:users,email,'.$id,
             'user_group' => 'required',
-            'kode' => 'required|unique:users,kode,'.$id,
         ];
 
         if ($request->password) {
             $rules['password'] = 'required|min:8';
-            $rules['konfirmasi_password'] = 'required|min:8|same:password';
+            $rules['password_confirmation'] = 'required|min:8|same:password';
         }
 
         $request->validate($rules);
 
-        // Simpan data sebelum diupdate
-        $previousData = $data->toArray();
+        $oldData = $data->toArray();
 
         $updates = [
+            // 'uuid' => generateUuid(),
             'name' => $request->name,
             'email' => $request->email,
-            'user_group_id' => $request->user_group,
+            'telephone' => $request->telephone,
+            'usergroup_id' => $request->user_group,
             'status' => $request->status,
-            'kode' => $request->kode,
             'remember_token' => Str::random(60),
         ];
 
@@ -188,345 +170,49 @@ class UserController extends Controller
             $updates['password'] = Hash::make($request->password);
         }
 
-        // Check if a profile exists for the user
-        $profile = Profile::where('user_kode', $data->kode)->firstOrNew([
-            'user_kode' => $data->kode,
-            'sosial_media' => '{"linkedin":"","twitter":"","instagram":"","facebook":""}',
-        ]);
-
-        // Update the profile data
-        $profile->user_kode = $updates['kode'];
-        $profile->save();
-
-        // Filter only the updated data
-        $updatedData = array_intersect_key($updates, $data->getOriginal());
-
+        $newData = array_intersect_key($updates, $data->getOriginal());
         $data->update($updates);
 
-        createLog(static::$module, __FUNCTION__, $data->id, ['Data sebelum diupdate' => $previousData, 'Data sesudah diupdate' => $updatedData]);
-        return redirect()->route('admin.users')->with('success', 'Data berhasil diupdate.');
-    }
-
-    
-    
-    
-    public function delete(Request $request)
-    {
-        // Check permission
-        if (!isAllowed(static::$module, "delete")) {
-            abort(403);
-        }
-
-        // Ensure you have authorization mechanisms here before proceeding to delete data.
-
-        $id = $request->id;
-
-        // Find the user based on the provided ID.
-        $user = User::findorfail($id);
-
-        if ($user->email == 'dev@daysf.com' && auth()->user()->email != $user->email) {
-            return response()->json([
-                'code' => 403,
-                'status' => 'forbidden',
-                'message' => 'Kamu tidak memiliki akses'
-            ], 403);
-        }
-
-        if (!$user) {
-            return response()->json([
-                'code' => 404,
-                'status' => 'error',
-                'message' => 'Pengguna tidak ditemukan'
-            ], 404);
-        }
-
-        // Store the data to be logged before deletion
-        $deletedData = $user->toArray();
-
-        // Delete the user.
-        $user->delete();
-
-        $profile = Profile::where('user_kode', $user->kode)->first();
-
-        if ($profile) {
-            // Check if the profile is being force-deleted
-            $profile->delete();
-        }
-
-        // Write logs only for soft delete (not force delete)
-        createLog(static::$module, __FUNCTION__, $id, ['Data yang dihapus' => ['User' => $deletedData, 'User Profile' => $profile]]);
-
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'message' => 'Pengguna telah dihapus.',
-        ],200);
-    }
-
-    
-    
-    public function getDetail($id){
-        //Check permission
-        if (!isAllowed(static::$module, "detail")) {
-            abort(403);
-        }
-
-        $data = User::with('user_group')->with('profile')->find($id);
-
-        return response()->json([
-            'data' => $data,
-            'status' => 'success',
-            'message' => 'Sukses memuat detail user.',
-        ]);
-    }
-
-    public function changeStatus(Request $request)
-    {
-        //Check permission
-        if (!isAllowed(static::$module, "status")) {
-            abort(403);
-        }
-        
-        $data['status'] = $request->status == "Aktif" ? 1 : 0;
-        $log = $request->status;
-        $id = $request->ix;
-        $updates = User::where(["id" => $id])->first();
-        if (!$updates) {
-            return response()->json([
-                'code' => 404,
-                'status' => 'error',
-                'message' => 'Pengguna tidak ditemukan'
-            ], 404);
-        }
-        // Simpan data sebelum diupdate
-        $previousData = $updates->toArray();
-        $updates->update($data);
-
-        //Write log
-        createLog(static::$module, __FUNCTION__, $id, ['Data User' => $previousData,'Statusnya diubah menjadi' => $log]);
-        return response()->json([
-            'code' => 200,
-            'status' => 'success',
-            'message' => 'Status telah diubah ke '. $request->status .'.',
-        ], 200);
+        createLog(static::$module, __FUNCTION__, $data->id, ['Updated Data' => ['Old Data' => $oldData, 'New Data' => $newData]]);
+        return redirect()->route('admin.users')->with('success', 'Data updated successfully.');
     }
     
-    public function getUserGroup(){
-        $usergroup = UserGroup::all();
-
-        return response()->json([
-            'usergroup' => $usergroup,
-        ]);
-    }
-
+    
     public function getDataUserGroup(){
-        $data = UserGroup::query();
+        $datas = UserGroup::select('id', 'name')->get()->toArray();
+    
+        $data = $datas;
+    
+        if (auth()->user()->usergroup_id === 0) {
+            $moderator = [
+                'id' => 0,
+                'name' => 'Moderator'
+            ];
+    
+            $data = array_merge([$moderator], $datas);
+        }
 
         return DataTables::of($data)
             ->make(true);
     }
     
-    public function generateKode(){
-        $generateKode = 'sanapp-' . substr(uniqid(), -5);
-
-        return response()->json([
-            'generateKode' => $generateKode,
-        ]);
-    }
-    
-    public function checkEmail(Request $request){
-        if($request->ajax()){
-            $users = User::where('email', $request->email)->withTrashed();
-            
-            if(isset($request->id)){
-                $users->where('id', '!=', $request->id);
-            }
-    
-            if($users->exists()){
-                return response()->json([
-                    'message' => 'Email sudah dipakai',
-                    'valid' => false
-                ]);
-            } else {
-                return response()->json([
-                    'valid' => true
-                ]);
-            }
-        }
-    }
-    
-    public function checkKode(Request $request){
-        if($request->ajax()){
-            $users = User::where('kode', $request->kode)->withTrashed();
-            
-            if(isset($request->id)){
-                $users->where('id', '!=', $request->id);
-            }
-    
-            if($users->exists()){
-                return response()->json([
-                    'message' => 'Kode sudah dipakai',
-                    'valid' => false
-                ]);
-            } else {
-                return response()->json([
-                    'valid' => true
-                ]);
-            }
-        }
-    }
-
-
-    public function arsip(){
-        //Check permission
-        if (!isAllowed(static::$module, "arsip")) {
-            abort(403);
-        }
-
-        return view('administrator.users.arsip');
-    }
-
-    public function getDataArsip(Request $request){
-        $data = User::query()->with('user_group')->onlyTrashed();
-
-        if ($request->status || $request->usergroup) {
-            if ($request->status != "") {
-                $status = $request->status == "Aktif" ? 1 : 0;
-                $data->where("status", $status);
-            }
-            
-            if ($request->usergroup != "") {
-                $usergroupid = $request->usergroup ;
-                $data->where("user_group_id", $usergroupid);
-            }
-            $data->get();
-        }
-
-        return DataTables::of($data)
-            ->addColumn('status', function ($row) {
-                if (isAllowed(static::$module, "status")) : //Check permission
-                    if ($row->status) {
-                        $status = '<div class="d-flex"><div class="form-check form-switch form-check-custom form-check-solid">
-                        <input class="form-check-input h-20px w-30px changeStatus" data-ix="' . $row->id . '" type="checkbox" value="1"
-                            name="status" checked="checked" />
-                        <label class="form-check-label fw-bold text-gray-400"
-                            for="status"></label>
-                    </div>';
-                        $status .= '<span class="badge bg-success">Aktif</span></div>';
-                    } else {
-                        $status = '<div class="d-flex"><div class="form-check form-switch form-check-custom form-check-solid">
-                        <input class="form-check-input h-20px w-30px changeStatus" data-ix="' . $row->id . '" type="checkbox" value="1"
-                            name="status"/>
-                            <label class="form-check-label fw-bold text-gray-400"
-                            for="status"></label>
-                            </div>';
-                        $status .= '<span class="badge bg-danger">Tidak Aktif</span></div>';
-                    }
-                    return $status;
-                endif;
-            })
-            ->addColumn('action', function ($row) {
-                $btn = "";
-                if (isAllowed(static::$module, "delete")) : //Check permission
-                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-danger btn-sm delete me-3 ">
-                    Delete
-                </a>';
-                endif;
-                if (isAllowed(static::$module, "restore")) : //Check permission
-                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-primary restore btn-sm me-3 ">
-                    Restore
-                </a>';
-                endif;
-                return $btn;
-            })
-            ->rawColumns(['status', 'action'])
-            ->make(true);
-    }
-
-    public function restore(Request $request)
+    public function checkEmail(Request $request)
     {
-        // Check permission
-        if (!isAllowed(static::$module, "restore")) {
-            abort(403);
-        }
-        
-        $id = $request->id;
-        $data = User::withTrashed()->find($id);
-        $profile = Profile::withTrashed()->where('user_kode', $data->kode)->first();
+        $email = $request->input('email');
+        $query = User::where('email', $email);
+        $data = $query->where('id', '!=', $request->id);
+        $isRegistered = $data->exists();
 
-        if (!$data) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data tidak ditemukan.'
-            ], 404);
-        }
-
-        if (!$profile) {
-            $profile = Profile::create([
-                'user_kode' => $data->kode,
-            ]);
-            $userProfiletoarray = '';
-        } else {
-            # code...
-            $userProfiletoarray = "'User Profile' => $profile->toArray()";
-        }
-        // Simpan data sebelum diupdate
-        $previousData = [
-            'User' => $data->toArray(),
-            $userProfiletoarray
-        ];
-
-        $data->restore();
-        if (!empty($profile)) {
-            $profile->restore();
-        }
-
-        $updated = ['User' => $data, 'User Profile' => $profile];
-
-        // Write logs if needed.
-        createLog(static::$module, __FUNCTION__, $id, ['Data yang dipulihkan' => $updated]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data telah dipulihkan.'
-        ]);
+        return response()->json(['registered' => $isRegistered]);
     }
-
-
-    public function forceDelete(Request $request)
-    {
-        //Check permission
-        if (!isAllowed(static::$module, "delete")) {
-            abort(403);
-        }
-        
-        $id = $request->id;
-
-        $data = User::withTrashed()->find($id);
-        $profile = Profile::withTrashed()->where('user_kode',$data->kode)->first();
-
-        if (!$data) {
-            return redirect()->route('admin.users.arsip')->with('error', 'Data tidak ditemukan.');
-        }
-
-        $data->forceDelete();
-        if (!empty($profile)) {
-            $profile->forceDelete();
-            $dataJsonProfile = $profile;
-        } else {
-            $dataJsonProfile = '';
-        }
-
-        $dataJson = [
-            $data,$dataJsonProfile
-        ];
-
-        // Write logs if needed.
-        createLog(static::$module, __FUNCTION__, $id, $dataJson);
     
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data telah dihapus secara permanent.',
-        ]);
+    public function checkTelephone(Request $request)
+    {
+        $telephone = $request->input('telephone');
+        $query = User::where('telephone', $telephone);
+        $data = $query->where('id', '!=', $request->id);
+        $isRegistered = $data->exists();
+
+        return response()->json(['registered' => $isRegistered]);
     }
 }

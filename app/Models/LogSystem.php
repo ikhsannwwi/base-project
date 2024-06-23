@@ -12,4 +12,8 @@ class LogSystem extends Model
     protected $table = 'log_system';
 
     protected $guarded = ['id'];
+
+    public $timestamps = true;
+
+    const UPDATED_AT = null;
 }

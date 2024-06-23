@@ -1927,10 +1927,10 @@
                             <!--end::Avatar-->
                             <!--begin::Username-->
                             <div class="d-flex flex-column">
-                                <div class="fw-bolder d-flex align-items-center fs-5">Max Smith
-                                    <span class="badge badge-light-success fw-bolder fs-8 px-2 py-1 ms-2">Pro</span>
+                                <div class="fw-bolder d-flex align-items-center fs-5">{{auth()->user() ? auth()->user()->name : ''}}
+                                    {{-- <span class="badge badge-light-success fw-bolder fs-8 px-2 py-1 ms-2">Pro</span> --}}
                                 </div>
-                                <a href="#" class="fw-bold text-muted text-hover-primary fs-7">max@kt.com</a>
+                                <a href="#" class="fw-bold text-muted text-hover-primary fs-7">{{auth()->user() ? auth()->user()->email : ''}}</a>
                             </div>
                             <!--end::Username-->
                         </div>
@@ -2081,12 +2081,12 @@
                     <!--end::Menu item-->
                     <!--begin::Menu item-->
                     <div class="menu-item px-5 my-1">
-                        <a href="#" class="menu-link px-5">Account Settings</a>
+                        <a href="{{route('admin.account', auth()->user() ? auth()->user()->uuid : '')}}" class="menu-link px-5">Account Settings</a>
                     </div>
                     <!--end::Menu item-->
                     <!--begin::Menu item-->
                     <div class="menu-item px-5">
-                        <a href="#" class="menu-link px-5">Sign Out</a>
+                        <a href="{{route('admin.auth.logout')}}" class="menu-link px-5">Sign Out</a>
                     </div>
                     <!--end::Menu item-->
                 </div>
