@@ -274,14 +274,32 @@
                 mode: "range"
             });
 
-            $('#triggerExportExcel').off().on('click', function(event) {
+            $('.triggerExportExcel').off().on('click', function(event) {
                 event.preventDefault();
 
                 var filterDate = getDate();
                 var filterUser = getUser();
                 var filterModule = getModule();
-                data_table.ajax.url('{{ route('admin.log_systems.exportExcel') }}?date=' + filterDate + '&user=' + filterUser + '&module=' + filterModule)
-                    .load();
+                var url = '{{ route('admin.log_systems.exportExcel') }}' + 
+                        '?date=' + encodeURIComponent(filterDate) + 
+                        '&user=' + encodeURIComponent(filterUser) + 
+                        '&module=' + encodeURIComponent(filterModule);
+                
+                window.open(url, '_blank');
+            });
+
+            $('.triggerExportPDF').off().on('click', function(event) {
+                event.preventDefault();
+
+                var filterDate = getDate();
+                var filterUser = getUser();
+                var filterModule = getModule();
+                var url = '{{ route('admin.log_systems.exportPdf') }}' + 
+                        '?date=' + encodeURIComponent(filterDate) + 
+                        '&user=' + encodeURIComponent(filterUser) + 
+                        '&module=' + encodeURIComponent(filterModule);
+                
+                window.open(url, '_blank');
             });
         })
     </script>
