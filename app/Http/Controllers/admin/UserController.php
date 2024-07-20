@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\admin;
 
+use DB;
 use DataTables;
 use App\Models\User;
 use App\Models\UserGroup;
@@ -23,24 +24,21 @@ class UserController extends Controller
     }
     
     public function getData(Request $request){
-        $data = User::query()->with('user_group');
+        $query = User::query()->with('user_group');
 
-        if (auth()->user()->email != 'dev@daysf.com') {
-            $data->where('email', '!=', 'dev@daysf.com');
-        }
-
-        if ($request->status || $request->usergroup) {
+        if (isset($request->status) || isset($request->usergroup)) {
             if ($request->status != "") {
-                $status = $request->status == "Aktif" ? 1 : 0;
-                $data->where("status", $status);
+                $status = $request->status;
+                $query->where("status", $status);
             }
             
             if ($request->usergroup != "") {
                 $usergroupid = $request->usergroup ;
-                $data->where("user_group_id", $usergroupid);
+                $query->where("usergroup_id", $usergroupid);
             }
-            $data->get();
         }
+
+        $data = $query->get();
 
         return DataTables::of($data)
             ->addColumn('status', function ($row) {
@@ -69,7 +67,7 @@ class UserController extends Controller
                     $btn .= '<a href="'.route('admin.users.edit',$row->id).'" class="btn btn-light-primary btn-sm mx-1" title="Edit"><i class="fas fa-edit"></i></a>';
                 endif;
                 if (isAllowed(static::$module, "detail")) :
-                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light btn-sm mx-1" title="Detail"><i class="fas fa-info-circle"></i></a>';
+                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light btn-sm mx-1" title="Detail" data-bs-toggle="modal" data-bs-target="#detail"><i class="fas fa-info-circle"></i></a>';
                 endif;
                 if (isAllowed(static::$module, "delete")) :
                     $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light-danger btn-sm delete mx-1" title="Delete"><i class="fas fa-trash"></i></a>';
@@ -214,5 +212,66 @@ class UserController extends Controller
         $isRegistered = $data->exists();
 
         return response()->json(['registered' => $isRegistered]);
+    }
+
+    public function getDetail(Request $request){
+        
+        try {
+            $data = User::with('user_group')->find($request->id);
+
+            $response = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data successfully',
+                'data' => $data,
+            ];
+        } catch (\Throwable $th) {
+            $response = [
+                'code' => $th->getCode(),
+                'status' => 'error',
+                'message' => $th->getMessage(),
+                'data' => []
+            ];
+        }
+        return $response;
+    }
+
+    public function changeStatus(Request $request)
+    {
+        if (!isAllowed(static::$module, "status")) {
+            abort(403);
+        }
+        
+        $id = $request->ix;
+        $status = $request->status == "Active" ? 1 : 0;
+
+        try {
+            DB::beginTransaction();
+            
+            $data = User::findOrFail($id);
+            $data->update(['status' => $status]);
+            
+            createLog(static::$module, __FUNCTION__, $id, ['Updated Status' => $data]);
+            
+            DB::commit();
+
+            $response = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Status updated successfully',
+                'data' => $data
+            ];
+        } catch (\Throwable $th) {
+            DB::rollback();
+
+            $response = [
+                'code' => $th->getCode(),
+                'status' => 'error',
+                'message' => $th->getMessage(),
+                'data' => []
+            ];
+        }
+
+        return $response;
     }
 }

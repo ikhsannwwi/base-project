@@ -14,7 +14,7 @@
         <!--begin::Row-->
         <div class="row g-5 gx-xxl-8 mb-xxl-3">
             <!--begin::Col-->
-            <div class="col-xxl-4">
+            <div class="col-12">
                 <!--begin::Engage Widget 1-->
                 <div class="card card-xxl-stretch">
                     <!--begin::Card body-->
@@ -27,7 +27,7 @@
                                 <!--end::Heading-->
                                 <div class="ms-auto d-flex d-none d-sm-block d-md-block d-lg-block d-xl-block d-xxl-block">
                                     <a href="javascript:void(0)" class="btn btn-light-primary mx-1 triggerFilterData">
-                                        <i class="fas fa-search fs-4"></i>
+                                        <i class="fas fa-filter fs-4"></i>
                                     </a>
                                     <a href="javascript:void(0)" class="btn btn-light-success mx-1">
                                         <i class="fas fa-file-excel fs-4"></i>
@@ -79,7 +79,7 @@
                                         <!--end::Menu separator-->
                                         <!--begin::Menu item-->
                                         <div class="menu-item px-3">
-                                            <a href="javascript:void(0)" class="menu-link px-3 triggerFilterData"><i class="fas fa-search mx-1"></i>Filter</a>
+                                            <a href="javascript:void(0)" class="menu-link px-3 triggerFilterData"><i class="fas fa-filter mx-1"></i>Filter</a>
                                         </div>
                                         <div class="menu-item px-3">
                                             <a href="{{route('admin.user_groups.add')}}" class="menu-link px-3"><i class="fas fa-plus mx-1"></i>Add Data</a>
@@ -93,37 +93,34 @@
                                     <!--end::Dropdown-->
                                 </div>
                             </div>
-                            <div id="filter-section" class="filter-section h-125px h-sm-200px h-md-200px h-lg-200px h-xl-200px h-xxl-200px" style="display: none">
+                            <div id="filter-section" class="filter-section" style="display: none">
                                 <div class="row">
-                                    <div class="col-6">
-                                        <select class="form-select form-select-solid" data-control="select2"
+                                    <div class="col-12 col-sm-6">
+                                        <label for="filter-status" class="form-label">Status</label>
+                                        <select class="form-select form-select-solid" id="filter-status" data-control="select2"
                                             data-placeholder="Select an option">
                                             <option></option>
-                                            <option value="1">Option 1</option>
-                                            <option value="2">Option 2</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-6">
-                                        <select class="form-select form-select-solid" data-control="select2"
-                                            data-placeholder="Select an option">
-                                            <option></option>
-                                            <option value="1">Option 1</option>
-                                            <option value="2">Option 2</option>
+                                            <option value="1">Active</option>
+                                            <option value="0">Inactive</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="row h-100px h-sm-150px h-md-150px h-lg-150px h-xl-150px h-xxl-150px">
                                     <div class="col-12 d-flex d-flex justify-content-end align-items-end">
-                                        <a href="javascript:void(0)" class="btn btn-light-warning mx-1">
-                                            <i class="fas fa-search fs-4"></i>Search
+                                        <a href="javascript:void(0)" class="btn btn-light-warning mx-1" id="filter-submit">
+                                            <i class="fas fa-filter fs-4"></i>Search
                                         </a>
-                                        <a href="javascript:void(0)" class="btn btn-light-danger mx-1">
+                                        <a href="javascript:void(0)" class="btn btn-light-danger mx-1" id="filter-reset">
                                             <i class="fas fa-undo"></i>Reset
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             <div class="section">
+                                <div class="searchbox-datatable d-flex align-items-center border-bottom col-12 col-sm-3">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="form-control form-control-flush" id="searchDataTable" value="" placeholder="Search..." data-kt-search-element="input">
+                                </div>
                                 <table id="DataTable" class="table table-striped table-row-bordered gy-5 gs-7">
                                     <thead>
                                         <tr class="fw-bold fs-6 text-gray-800">
@@ -149,6 +146,8 @@
         </div>
         <!--end::Row-->
     </div>
+
+    @include('administrator.user_groups.util.detail')
 @endsection
 @push('scripts')
     <script src="{{ asset_administrator('plugins/sweetalert2/page/option.js') }}"></script>
@@ -164,10 +163,7 @@
                 ajax: {
                     url: '{{ route('admin.user_groups.getData') }}',
                     dataType: "JSON",
-                    type: "GET",
-                    data: function(d) {
-                        // d.status = getStatus();
-                    }
+                    type: "GET"
 
                 },
                 columns: [{
@@ -193,9 +189,33 @@
                 ],
             });
 
-            $('.triggerFilterData').on('click', function(){
+            $('#searchDataTable').on('keyup', function() {
+                data_table.search(this.value).draw();
+            });
+
+            function getStatus() {
+                return $('#filter-status').val();
+            }
+
+            $('.triggerFilterData').on('click', function() {
                 $('#filter-section').slideToggle();
-            })
+            });
+
+            $('#filter-submit').on('click', function(event) {
+                event.preventDefault();
+
+                var filterStatus = getStatus();
+                data_table.ajax.url('{{ route('admin.user_groups.getData') }}?status=' + filterStatus)
+                    .load();
+            });
+
+            $('#filter-reset').on('click', function(event) {
+                event.preventDefault();
+
+                $('#filter-status').val(null).trigger('change');
+                data_table.ajax.url('{{ route('admin.user_groups.getData') }}?status=').load();
+            });
+
 
             $(document).on('click', '.delete', function() {
                 var another = this
@@ -237,6 +257,62 @@
                     }
                 });
             })
+
+            $(document).on('click', '.changeStatus', function(event) {
+                var ix = $(this).data('ix');
+                if ($(this).is(':checked')) {
+                    var status = "Inactive";
+                    var changeto = "Active";
+                } else {
+                    var status = "Active"
+                    var changeto = "Inactive";
+                }
+
+                Swal.fire({
+                    html: 'Are you sure you want to change the status to ' + changeto + '?',
+                    icon: "info",
+                    buttonsStyling: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Ok, got it!",
+                    cancelButtonText: 'Nope, cancel it',
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                        cancelButton: 'btn btn-danger'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ route('admin.user_groups.changeStatus') }}",
+                            data: ({
+                                "_token": "{{ csrf_token() }}",
+                                ix: ix,
+                                status: changeto,
+                            }),
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    data_table.ajax.reload(null, false);
+                                    var toasty = new Toasty(optionToast);
+                                    toasty.configure(optionToast);
+                                    toasty.success(response.message);
+                                }else{
+                                    data_table.ajax.reload(null, false);
+                                    var toasty = new Toasty(optionToast);
+                                    toasty.configure(optionToast);
+                                    toasty.error(response.message);
+                                }
+                            }
+                        });
+
+                    } else {
+                        if (status == "Active") {
+                            $(this).prop("checked", true);
+                        } else {
+                            $(this).prop("checked", false);
+                        }
+                    }
+                });
+            });
         })
     </script>
 @endpush

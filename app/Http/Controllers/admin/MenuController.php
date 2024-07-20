@@ -10,7 +10,7 @@ use App\Http\Controllers\Controller;
 
 class MenuController extends Controller
 {
-    private static $module = 'Menus';
+    private static $module = 'menu';
 
     public function index(){
         return view('administrator.menus.index');
@@ -19,7 +19,14 @@ class MenuController extends Controller
     public function getData(Request $request){
         $query = Menu::query()->orderBy('row_order', 'asc');
 
-        return DataTables::of($query)
+        if ($request->status != "") {
+            $status = $request->status;
+            $query->where("status", $status);
+        }
+
+        $data = $query->get();
+
+        return DataTables::of($data)
             ->addColumn('status', function ($row) {
                 if (isAllowed(static::$module, "status")) : //Check permission
                     if ($row->status) {
@@ -120,7 +127,6 @@ class MenuController extends Controller
                 'data' => $data
             ];
             
-            return $response;
         } catch (\Throwable $th) {
             DB::rollback();
             $response = [
@@ -130,8 +136,8 @@ class MenuController extends Controller
                 'data' => $data
             ];
     
-            return $response;
         }
+        return $response;
     }
 
     public function updateRowOrder(Request $request){

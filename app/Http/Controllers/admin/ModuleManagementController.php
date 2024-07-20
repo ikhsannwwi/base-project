@@ -20,16 +20,23 @@ class ModuleManagementController extends Controller
     }
 
     public function getData(Request $request){
-        $query = Module::query()->orderBy('menu_id', 'asc')->orderBy('row_order', 'asc');
+        $query = Module::query()->with('menu')->orderBy('menu_id', 'asc')->orderBy('row_order', 'asc');
 
-        return DataTables::of($query)
+        if ($request->menu != "") {
+            $menu = $request->menu;
+            $query->where("menu_id", $menu);
+        }
+
+        $data = $query->get();
+
+        return DataTables::of($data)
             ->addColumn('action', function ($row) {
                 $btn = "";
                 if (isAllowed(static::$module, "edit")) :
                     $btn .= '<a href="'.route('admin.module_managements.edit',$row->id).'" class="btn btn-light-primary btn-sm mx-1" title="Edit"><i class="fas fa-edit"></i></a>';
                 endif;
                 if (isAllowed(static::$module, "detail")) :
-                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light btn-sm mx-1" title="Detail"><i class="fas fa-info-circle"></i></a>';
+                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light btn-sm mx-1" title="Detail" data-bs-toggle="modal" data-bs-target="#detail"><i class="fas fa-info-circle"></i></a>';
                 endif;
                 if (isAllowed(static::$module, "delete")) :
                     $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light-danger btn-sm delete mx-1" title="Delete"><i class="fas fa-trash"></i></a>';
@@ -96,7 +103,7 @@ class ModuleManagementController extends Controller
         return view('administrator.modules.edit', compact('menus','data'));
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request){
         $request->validate([
             'menu' => 'string',
             'name' => 'required|string',
@@ -176,7 +183,6 @@ class ModuleManagementController extends Controller
                 'data' => $data
             ];
             
-            return $response;
         } catch (\Throwable $th) {
             DB::rollback();
             $response = [
@@ -186,8 +192,8 @@ class ModuleManagementController extends Controller
                 'data' => $data
             ];
     
-            return $response;
         }
+        return $response;
     }
 
     public function destroyAccess(Request $request){
@@ -206,7 +212,6 @@ class ModuleManagementController extends Controller
                 'data' => $data
             ];
     
-            return $response;
         } catch (\Throwable $th) {
             DB::rollback();
             $response = [
@@ -215,8 +220,8 @@ class ModuleManagementController extends Controller
                 'message' => $th->getMessage(),
                 'data' => $data
             ];
-            return $response;
         }
+        return $response;
     }
 
     public function updateRowOrder(Request $request){
@@ -236,5 +241,36 @@ class ModuleManagementController extends Controller
         ];
         
         return $response;
+    }
+
+    public function getDetail(Request $request){
+        
+        try {
+            $data = Module::with('access')->with('menu')->find($request->id);
+
+            $response = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data successfully',
+                'data' => $data,
+            ];
+        } catch (\Throwable $th) {
+            $response = [
+                'code' => $th->getCode(),
+                'status' => 'error',
+                'message' => $th->getMessage(),
+                'data' => []
+            ];
+        }
+        return $response;
+    }
+
+    public function getDataMenu(){
+        $datas = Menu::select('id', 'icon', 'name')->get()->toArray();
+    
+        $data = $datas;
+
+        return DataTables::of($data)
+            ->make(true);
     }
 }

@@ -8,12 +8,6 @@ use App\Http\Controllers\Controller;
 
 class AccountController extends Controller
 {
-    public function index($uuid){
-        $data = User::where('uuid', $uuid)->first();
-
-        return view('administrator.account.index', compact('data'));
-    }
-
     public function overview(Request $request){
         $uuid = $request->uuid;
         $data = User::where('uuid', $uuid)->first();

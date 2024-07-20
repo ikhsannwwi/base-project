@@ -14,7 +14,7 @@
         <!--begin::Row-->
         <div class="row g-5 gx-xxl-8 mb-xxl-3">
             <!--begin::Col-->
-            <div class="col-xxl-4">
+            <div class="col-12">
                 <!--begin::Engage Widget 1-->
                 <div class="card card-xxl-stretch">
                     <!--begin::Card body-->
@@ -27,7 +27,7 @@
                                 <!--end::Heading-->
                                 <div class="ms-auto d-flex d-none d-sm-block d-md-block d-lg-block d-xl-block d-xxl-block">
                                     <a href="javascript:void(0)" class="btn btn-light-primary mx-1 triggerFilterData">
-                                        <i class="fas fa-search fs-4"></i>
+                                        <i class="fas fa-filter fs-4"></i>
                                     </a>
                                     <a href="{{route('admin.module_managements.add')}}" class="btn btn-primary mx-1">
                                         <i class="fas fa-plus fs-4"></i>Add
@@ -73,7 +73,7 @@
                                         <!--end::Menu separator-->
                                         <!--begin::Menu item-->
                                         <div class="menu-item px-3">
-                                            <a href="javascript:void(0)" class="menu-link px-3 triggerFilterData"><i class="fas fa-search mx-1"></i>Filter</a>
+                                            <a href="javascript:void(0)" class="menu-link px-3 triggerFilterData"><i class="fas fa-filter mx-1"></i>Filter</a>
                                         </div>
                                         <div class="menu-item px-3">
                                             <a href="{{route('admin.module_managements.add')}}" class="menu-link px-3"><i class="fas fa-plus mx-1"></i>Add Data</a>
@@ -87,41 +87,41 @@
                                     <!--end::Dropdown-->
                                 </div>
                             </div>
-                            <div id="filter-section" class="filter-section h-125px h-sm-200px h-md-200px h-lg-200px h-xl-200px h-xxl-200px" style="display: none">
+                            <div id="filter-section" class="filter-section" style="display: none">
                                 <div class="row">
-                                    <div class="col-6">
-                                        <select class="form-select form-select-solid" data-control="select2"
-                                            data-placeholder="Select an option">
-                                            <option></option>
-                                            <option value="1">Option 1</option>
-                                            <option value="2">Option 2</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-6">
-                                        <select class="form-select form-select-solid" data-control="select2"
-                                            data-placeholder="Select an option">
-                                            <option></option>
-                                            <option value="1">Option 1</option>
-                                            <option value="2">Option 2</option>
-                                        </select>
+                                    <div class="col-12 col-sm-6 col-lg-4">
+                                        <label for="filter-menu" class="form-label">Menu</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" value="" id="inputMenuName" placeholder="Menu Name" data-parsley-required="true" readonly>
+                                            <input type="text" class="d-none" value="" name="menu" id="inputMenuId">
+                                            <a href="#" class="btn btn-light-primary btn-sm pt-4" data-bs-toggle="modal"
+                                                data-bs-target="#filter-menu">
+                                                <i class="fas fa-search mx-1"></i>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="row h-100px h-sm-150px h-md-150px h-lg-150px h-xl-150px h-xxl-150px">
                                     <div class="col-12 d-flex d-flex justify-content-end align-items-end">
-                                        <a href="javascript:void(0)" class="btn btn-light-warning mx-1">
-                                            <i class="fas fa-search fs-4"></i>Search
+                                        <a href="javascript:void(0)" class="btn btn-light-warning mx-1" id="filter-submit">
+                                            <i class="fas fa-filter fs-4"></i>Search
                                         </a>
-                                        <a href="javascript:void(0)" class="btn btn-light-danger mx-1">
+                                        <a href="javascript:void(0)" class="btn btn-light-danger mx-1" id="filter-reset">
                                             <i class="fas fa-undo"></i>Reset
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             <div class="section">
+                                <div class="searchbox-datatable d-flex align-items-center border-bottom col-12 col-sm-3">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="form-control form-control-flush" id="searchDataTable" value="" placeholder="Search..." data-kt-search-element="input">
+                                </div>
                                 <table id="DataTable" class="table table-striped table-row-bordered gy-5 gs-7">
                                     <thead>
                                         <tr class="fw-bold fs-6 text-gray-800">
                                             <th class="min-w-15px">No</th>
+                                            <th class="min-w-200px">Menu</th>
                                             <th class="min-w-200px">Name</th>
                                             <th class="min-w-200px">Identifier</th>
                                             <th class="min-w-200px">Url</th>
@@ -144,6 +144,8 @@
         </div>
         <!--end::Row-->
     </div>
+    @include('administrator.modules.util.detail')
+    @include('administrator.modules.util.filter-menu')
 @endsection
 @push('scripts')
     <script src="{{ asset_administrator('plugins/sweetalert2/page/option.js') }}"></script>
@@ -174,6 +176,13 @@
                         render: function(data, type, row, meta) {
                             return meta.row + meta.settings._iDisplayStart + 1;
                         },
+                    },
+                    {
+                        data: 'menu.name',
+                        name: 'menu.name',
+                        render: function(data, type, row) {
+                            return data ? data : '';
+                        }
                     },
                     {
                         data: 'name',
@@ -217,9 +226,34 @@
                 });
             });
 
+            $('#searchDataTable').on('keyup', function() {
+                data_table.search(this.value).draw();
+            });
+
             $('.triggerFilterData').on('click', function(){
                 $('#filter-section').slideToggle();
             })
+
+            function getMenu() {
+                return $('#inputMenuId').val();
+            }
+
+            $('#filter-submit').on('click', function(event) {
+                event.preventDefault();
+
+                var filterMenu = getMenu();
+                data_table.ajax.url('{{ route('admin.module_managements.getData') }}?menu=' + filterMenu)
+                    .load();
+            });
+
+            $('#filter-reset').on('click', function(event) {
+                event.preventDefault();
+
+                $('#inputMenuId').val('');
+                $('#inputMenuName').val('');
+
+                data_table.ajax.url('{{ route('admin.module_managements.getData') }}').load();
+            });
 
             $(document).on('click', '.delete', function() {
                 var another = this

@@ -12,7 +12,7 @@ use App\Http\Controllers\Controller;
 
 class UserGroupController extends Controller
 {
-    private static $module = 'user_groups';
+    private static $module = 'user_group';
 
     public function index(){
         return view('administrator.user_groups.index');
@@ -26,6 +26,11 @@ class UserGroupController extends Controller
 
     public function getData(Request $request){
         $query = UserGroup::query();
+
+        if ($request->status != "") {
+            $status = $request->status;
+            $query->where("status", $status);
+        }
 
         $data = $query->get();
 
@@ -56,7 +61,7 @@ class UserGroupController extends Controller
                     $btn .= '<a href="'.route('admin.user_groups.edit',$row->id).'" class="btn btn-light-primary btn-sm mx-1" title="Edit"><i class="fas fa-edit"></i></a>';
                 endif;
                 if (isAllowed(static::$module, "detail")) :
-                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light btn-sm mx-1" title="Detail"><i class="fas fa-info-circle"></i></a>';
+                    $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light btn-sm mx-1" title="Detail" data-bs-toggle="modal" data-bs-target="#detail"><i class="fas fa-info-circle"></i></a>';
                 endif;
                 if (isAllowed(static::$module, "delete")) :
                     $btn .= '<a href="#" data-id="' . $row->id . '" class="btn btn-light-danger btn-sm delete mx-1" title="Delete"><i class="fas fa-trash"></i></a>';
@@ -110,7 +115,7 @@ class UserGroupController extends Controller
         return view('administrator.user_groups.edit', compact('data', 'modules', 'permission'));
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request){
         $request->validate([
             'name' => 'required'
         ]);
@@ -194,7 +199,6 @@ class UserGroupController extends Controller
                 'data' => $data
             ];
             
-            return $response;
         } catch (\Throwable $th) {
             DB::rollback();
             $response = [
@@ -204,8 +208,8 @@ class UserGroupController extends Controller
                 'data' => $data
             ];
     
-            return $response;
         }
+        return $response;
     }
 
     public function checkName(Request $request)
@@ -214,5 +218,70 @@ class UserGroupController extends Controller
         $isRegistered = UserGroup::where('name', $name)->exists();
 
         return response()->json(['registered' => $isRegistered]);
+    }
+    
+    public function getDetail(Request $request){
+        
+        try {
+            $data = UserGroup::find($request->id);
+            $modules = Module::with("access")->get();
+            $permission = getPermissionGroup($request->id);
+
+            $response = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Data successfully',
+                'data' => $data,
+                'modules' => $modules,
+                'permission' => $permission,
+            ];
+        } catch (\Throwable $th) {
+            $response = [
+                'code' => $th->getCode(),
+                'status' => 'error',
+                'message' => $th->getMessage(),
+                'data' => []
+            ];
+        }
+        return $response;
+    }
+
+    public function changeStatus(Request $request)
+    {
+        if (!isAllowed(static::$module, "status")) {
+            abort(403);
+        }
+        
+        $id = $request->ix;
+        $status = $request->status == "Active" ? 1 : 0;
+
+        try {
+            DB::beginTransaction();
+            
+            $data = UserGroup::findOrFail($id);
+            $data->update(['status' => $status]);
+            
+            createLog(static::$module, __FUNCTION__, $id, ['Updated Status' => $data]);
+            
+            DB::commit();
+
+            $response = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Status updated successfully',
+                'data' => $data
+            ];
+        } catch (\Throwable $th) {
+            DB::rollback();
+
+            $response = [
+                'code' => $th->getCode(),
+                'status' => 'error',
+                'message' => $th->getMessage(),
+                'data' => []
+            ];
+        }
+
+        return $response;
     }
 }
