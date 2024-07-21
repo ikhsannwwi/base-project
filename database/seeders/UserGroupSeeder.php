@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Module;
 use App\Models\UserGroup;
 use Illuminate\Support\Str;
 use App\Models\ModuleAccess;
@@ -25,16 +26,19 @@ class UserGroupSeeder extends Seeder
             'created_by' => 1,
         ]);
 
+        $moduleIds = Module::whereIn('identifier', ['menu', 'module'])->pluck('id');;
         $access = ModuleAccess::all();
 
         foreach ($access as $index => $row) {
-            UserGroupPermission::create([
-                'usergroup_id' => $user_group->id,
-                'module_access_id' => $row->id,
-                'status' => 1,
-                'created_at' => now(),
-                'created_by' => 1,
-            ]);
+            if (!$moduleIds->contains($row->module_id)) {
+                UserGroupPermission::create([
+                    'usergroup_id' => $user_group->id,
+                    'module_access_id' => $row->id,
+                    'status' => 1,
+                    'created_at' => now(),
+                    'created_by' => 1,
+                ]);
+            }
         }
 
         $user = User::create([
