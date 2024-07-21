@@ -23,6 +23,7 @@ Route::middleware(['auth.admin'])->group(function () {
     
     Route::get('account/{uuid}/overview', [AccountController::class, 'overview'])->name('admin.account');
     Route::get('account/{uuid}/settings', [AccountController::class, 'settings'])->name('admin.account.settings');
+    Route::put('account/{uuid}/settings/update', [AccountController::class, 'updateSettings'])->name('admin.account.settings.update');
     Route::get('account/{uuid}/security', [AccountController::class, 'security'])->name('admin.account.security');
     Route::get('account/{uuid}/activity', [AccountController::class, 'activity'])->name('admin.account.activity');
     Route::get('account/{uuid}/logs', [AccountController::class, 'logs'])->name('admin.account.logs');

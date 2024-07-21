@@ -1911,7 +1911,7 @@
                 <!--begin::Menu wrapper-->
                 <div class="cursor-pointer symbol symbol-30px symbol-md-40px" data-kt-menu-trigger="click"
                     data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-flip="bottom">
-                    <img src="{{ template_administrator('assets/media/avatars/150-2.jpg') }}" alt="metronic" />
+                    <img src="{{img_src(auth()->user() ? auth()->user()->image : '','accounts')}}" alt="metronic" />
                 </div>
                 <!--begin::Menu-->
                 <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-bold py-4 fs-6 w-275px"
@@ -1922,7 +1922,7 @@
                             <!--begin::Avatar-->
                             <div class="symbol symbol-50px me-5">
                                 <img alt="Logo"
-                                    src="{{ template_administrator('assets/media/avatars/150-2.jpg') }}" />
+                                    src="{{img_src(auth()->user() ? auth()->user()->image : '','accounts')}}" />
                             </div>
                             <!--end::Avatar-->
                             <!--begin::Username-->
@@ -1941,7 +1941,7 @@
                     <!--end::Menu separator-->
                     <!--begin::Menu item-->
                     <div class="menu-item px-5">
-                        <a href="account/overview.html" class="menu-link px-5">Profile</a>
+                        <a href="{{route('admin.account', auth()->user() ? auth()->user()->uuid : '')}}" class="menu-link px-5">Profile</a>
                     </div>
                     <!--end::Menu item-->
                     <!--begin::Menu item-->
@@ -2081,7 +2081,7 @@
                     <!--end::Menu item-->
                     <!--begin::Menu item-->
                     <div class="menu-item px-5 my-1">
-                        <a href="{{route('admin.account', auth()->user() ? auth()->user()->uuid : '')}}" class="menu-link px-5">Account Settings</a>
+                        <a href="{{route('admin.account.settings', auth()->user() ? auth()->user()->uuid : '')}}" class="menu-link px-5">Account Settings</a>
                     </div>
                     <!--end::Menu item-->
                     <!--begin::Menu item-->

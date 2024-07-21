@@ -34,6 +34,9 @@ function upload_path($type = '', $file = '')
 		case 'settings':
 			$target_folder = 'settings';
 			break;
+		case 'accounts':
+			$target_folder = 'accounts';
+			break;
 		default:
 			$target_folder = '';
 			break;
@@ -53,6 +56,9 @@ function img_src($image = '', $img_type = '')
 			case 'settings':
 				$folder = '/settings/';
 				break;
+			case 'accounts':
+				$folder = '/accounts/';
+				break;
 			default:
 				$folder = '/';
 				break;
@@ -66,7 +72,7 @@ function img_src($image = '', $img_type = '')
 		} elseif (file_exists($file_notfound)) {
 			return url($file_notfound);
 		} else {
-			return 'http://placehold.it/500x500?text=Not Found';
+			return asset_administrator('assets/media/default/image-broken.png');
 		}
 	}
 }
