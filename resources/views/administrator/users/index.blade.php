@@ -94,7 +94,7 @@
                                 </div>
                             </div>
                             <div id="filter-section" class="filter-section" style="display: none">
-                                <div class="row">
+                                <div class="row gy-3">
                                     <div class="col-12 col-sm-6">
                                         <label for="filter-status" class="form-label">Status</label>
                                         <select class="form-select form-select-solid" id="filter-status" data-control="select2"

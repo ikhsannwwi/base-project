@@ -88,7 +88,7 @@
                                 </div>
                             </div>
                             <div id="filter-section" class="filter-section" style="display: none">
-                                <div class="row">
+                                <div class="row gy-3">
                                     <div class="col-12 col-sm-6 col-lg-4">
                                         <label for="filter-menu" class="form-label">Menu</label>
                                         <div class="input-group">

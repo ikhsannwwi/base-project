@@ -3,6 +3,15 @@
         <div class="modal-content shadow-none">
             <div class="modal-header">
                 <h5 class="modal-title">Detail <span id="title"></span></h5>
+                <div class="button-export ms-auto">
+                    <input type="hidden" id="inputId" value="">
+                    <a href="javascript:void(0)" class="btn btn-light-success mx-1 triggerExportDetailExcel">
+                        <i class="fas fa-file-excel fs-4"></i>
+                    </a>
+                    <a href="javascript:void(0)" class="btn btn-light-danger mx-1 triggerExportDetailPDF">
+                        <i class="fas fa-file-pdf fs-4"></i>
+                    </a>
+                </div>
 
                 <!--begin::Close-->
                 <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
@@ -56,6 +65,7 @@
                 method: 'POST',
                 success: function(response) {
                     var data = response.data;
+                    $('#inputId').val(data.id)
                     $('#title').text(data.ip_address)
 
                     const jsonObj = JSON.parse(data.data);
@@ -230,6 +240,26 @@
                     );
 
                     loadingSpinner.hide();
+                    
+                    $('.triggerExportDetailExcel').off().on('click', function(event) {
+                        event.preventDefault();
+
+                        var getId = $('#inputId').val();
+                        var url = '{{ route('admin.log_systems.exportDetailExcel') }}' + 
+                                '?id=' + encodeURIComponent(getId);
+                        
+                        window.open(url, '_blank');
+                    });
+
+                    $('.triggerExportDetailPDF').off().on('click', function(event) {
+                        event.preventDefault();
+
+                        var getId = $('#inputId').val();
+                        var url = '{{ route('admin.log_systems.exportDetailPdf') }}' + 
+                                '?id=' + encodeURIComponent(getId);
+                        
+                        window.open(url, '_blank');
+                    });
                 }
             });
         });

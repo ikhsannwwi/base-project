@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\Excel\LogSystemExcel;
+use App\Exports\Excel\LogSystemDetailExcel;
 
 class LogSystemController extends Controller
 {
@@ -111,32 +112,25 @@ class LogSystemController extends Controller
 
         $query = LogSystem::query()->with('user');
 
-        if (isset($request->date) || isset($request->user) || isset($request->module)) {
-            if (!empty($request->date)) {
-                $dateRange = explode(' to ', $request->date);
-                if (count($dateRange) === 2) {
-                    $dateStart = $dateRange[0];
-                    $dateEnd = $dateRange[1];
-                    $query->whereBetween('created_at', [$dateStart, $dateEnd]);
-                }
-            }
-            
-            if ($request->user != "") {
-                $userid = $request->user ;
-                $query->where("user_id", $userid);
-            }
-            
-            if ($request->module != "") {
-                $moduleid = $request->module;
-                $module = Module::select('identifier')->where('id', $moduleid)->first();
-                $query->where("module", $module->identifier);
-            }
-        }
-
         $data = $query->get();
 
         $pdf = PDF::loadView('administrator.log_systems.pdf.index', compact('data'));
 
         return $pdf->stream('report-log-systems.pdf');
+    }
+
+    public function exportDetailExcel(Request $request){
+        return Excel::download(new LogSystemDetailExcel($request), 'report-detail-log-systems.xlsx');
+    }
+
+    public function exportDetailPdf(Request $request){
+
+        $query = LogSystem::query()->where('id', $request->id)->with('user');
+
+        $data = $query->first();
+
+        $pdf = PDF::loadView('administrator.log_systems.pdf.detail', compact('data'));
+
+        return $pdf->stream('report-detail-log-systems.pdf');
     }
 }

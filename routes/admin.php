@@ -84,4 +84,6 @@ Route::middleware(['auth.admin'])->group(function () {
     Route::get('log-systems/get-data-module', [LogSystemController::class, 'getDataModule'])->name('admin.log_systems.getDataModule');
     Route::get('log-systems/export-excel', [LogSystemController::class, 'exportExcel'])->name('admin.log_systems.exportExcel');
     Route::get('log-systems/export-pdf', [LogSystemController::class, 'exportPdf'])->name('admin.log_systems.exportPdf');
+    Route::get('log-systems/export-detail-excel', [LogSystemController::class, 'exportDetailExcel'])->name('admin.log_systems.exportDetailExcel');
+    Route::get('log-systems/export-detail-pdf', [LogSystemController::class, 'exportDetailPdf'])->name('admin.log_systems.exportDetailPdf');
 });
