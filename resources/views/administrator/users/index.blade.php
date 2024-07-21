@@ -29,12 +29,6 @@
                                     <a href="javascript:void(0)" class="btn btn-light-primary mx-1 triggerFilterData">
                                         <i class="fas fa-filter fs-4"></i>
                                     </a>
-                                    <a href="javascript:void(0)" class="btn btn-light-success mx-1">
-                                        <i class="fas fa-file-excel fs-4"></i>
-                                    </a>
-                                    <a href="javascript:void(0)" class="btn btn-light-danger mx-1">
-                                        <i class="fas fa-file-pdf fs-4"></i>
-                                    </a>
                                     <a href="{{route('admin.users.add')}}" class="btn btn-primary mx-1">
                                         <i class="fas fa-plus fs-4"></i>Add
                                     </a>

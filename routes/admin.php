@@ -36,6 +36,7 @@ Route::middleware(['auth.admin'])->group(function () {
     Route::put('menus/update', [MenuController::class, 'update'])->name('admin.menus.update');
     Route::get('menus/destroy', [MenuController::class, 'destroy'])->name('admin.menus.destroy');
     Route::post('menus/update-row-order', [MenuController::class, 'updateRowOrder'])->name('admin.menus.updateRowOrder');
+    Route::post('menus/change-status', [MenuController::class, 'changeStatus'])->name('admin.menus.changeStatus');
 
     //Module Managements
     Route::get('module-managements', [ModuleManagementController::class, 'index'])->name('admin.module_managements');

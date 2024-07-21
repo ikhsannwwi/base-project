@@ -7,7 +7,7 @@
             data-kt-swapper="true" data-kt-swapper-mode="prepend"
             data-kt-swapper-parent="{default: '#kt_content_container', lg: '#kt_header_container'}">
             <!--begin::Heading-->
-            <h1 class="text-dark fw-bolder my-1 fs-2">Welcome to Jet
+            <h1 class="text-dark fw-bolder my-1 fs-2">Welcome to Base Project
                 <small class="text-muted fs-6 fw-normal ms-1"></small>
             </h1>
             <!--end::Heading-->

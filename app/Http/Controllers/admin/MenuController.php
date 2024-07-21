@@ -158,4 +158,43 @@ class MenuController extends Controller
         
         return $response;
     }
+    
+    public function changeStatus(Request $request)
+    {
+        if (!isAllowed(static::$module, "status")) {
+            abort(403);
+        }
+        
+        $id = $request->ix;
+        $status = $request->status == "Active" ? 1 : 0;
+
+        try {
+            DB::beginTransaction();
+            
+            $data = Menu::findOrFail($id);
+            $data->update(['status' => $status]);
+            
+            createLog(static::$module, __FUNCTION__, $id, ['Updated Status' => $data]);
+            
+            DB::commit();
+
+            $response = [
+                'code' => 200,
+                'status' => 'success',
+                'message' => 'Status updated successfully',
+                'data' => $data
+            ];
+        } catch (\Throwable $th) {
+            DB::rollback();
+
+            $response = [
+                'code' => $th->getCode(),
+                'status' => 'error',
+                'message' => $th->getMessage(),
+                'data' => []
+            ];
+        }
+
+        return $response;
+    }
 }

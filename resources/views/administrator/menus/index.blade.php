@@ -286,6 +286,62 @@
                     }
                 });
             })
+
+            $(document).on('click', '.changeStatus', function(event) {
+                var ix = $(this).data('ix');
+                if ($(this).is(':checked')) {
+                    var status = "Inactive";
+                    var changeto = "Active";
+                } else {
+                    var status = "Active"
+                    var changeto = "Inactive";
+                }
+
+                Swal.fire({
+                    html: 'Are you sure you want to change the status to ' + changeto + '?',
+                    icon: "info",
+                    buttonsStyling: false,
+                    showCancelButton: true,
+                    confirmButtonText: "Ok, got it!",
+                    cancelButtonText: 'Nope, cancel it',
+                    customClass: {
+                        confirmButton: "btn btn-primary",
+                        cancelButton: 'btn btn-danger'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ route('admin.menus.changeStatus') }}",
+                            data: ({
+                                "_token": "{{ csrf_token() }}",
+                                ix: ix,
+                                status: changeto,
+                            }),
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    data_table.ajax.reload(null, false);
+                                    var toasty = new Toasty(optionToast);
+                                    toasty.configure(optionToast);
+                                    toasty.success(response.message);
+                                }else{
+                                    data_table.ajax.reload(null, false);
+                                    var toasty = new Toasty(optionToast);
+                                    toasty.configure(optionToast);
+                                    toasty.error(response.message);
+                                }
+                            }
+                        });
+
+                    } else {
+                        if (status == "Active") {
+                            $(this).prop("checked", true);
+                        } else {
+                            $(this).prop("checked", false);
+                        }
+                    }
+                });
+            });
         })
     </script>
 @endpush
